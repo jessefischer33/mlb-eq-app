@@ -1,0 +1,366 @@
+* {
+    box-sizing: border-box;
+} 
+
+/*the container must be positioned relative:*/
+.autocomplete {
+position: relative;
+display: inline-block;
+}
+
+input {
+border: 1px solid transparent;
+background-color: #f1f1f1;
+padding: 10px;
+font-size: 14px;
+}
+
+input[type=text] {
+background-color: #f1f1f1;
+width: 100%;
+}
+
+input[type=submit] {
+background-color: Black;
+color: #fff;
+cursor: pointer;
+}
+
+.styled-button {
+    background-color: #007BFF;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.styled-button:hover {
+    background-color: #0056b3;
+}
+
+.autocomplete-items {
+position: absolute;
+border: 1px solid #d4d4d4;
+border-bottom: none;
+border-top: none;
+z-index: 99;
+/*position the autocomplete items to be the same width as the container:*/
+top: 100%;
+left: 0;
+right: 0;
+}
+
+.autocomplete-items div {
+padding: 10px;
+cursor: pointer;
+background-color: #fff; 
+border-bottom: 1px solid #d4d4d4; 
+}
+
+/*when hovering an item:*/
+.autocomplete-items div:hover {
+background-color: #e9e9e9; 
+}
+
+/*when navigating through the items using the arrow keys:*/
+.autocomplete-active {
+background-color: Black !important; 
+color: #ffffff; 
+}
+
+select {
+border: 1px solid transparent;
+background-color: #f1f1f1;
+padding: 10px 0 10px 10px;
+font-family: inherit;
+font-size: inherit;
+cursor: inherit;
+line-height: inherit;
+}
+
+/* General Page Styling */
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #f4f4f4;
+    text-align: center;
+    margin: 0;
+    padding: 50px;
+}
+
+/* Player Profile Container */
+.player-container {
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+    width: 60%;
+    margin: auto;
+    text-align: left;
+}
+
+/* Player Header */
+.player-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* Moves team logo to right */
+    gap: 20px;
+}
+
+.headshot {
+    width: 125px;
+    height: 125px;
+    border-radius: 50%;
+    object-fit: cover; /* Ensures the headshot is not distorted */
+}
+
+.player-info {
+    display: flex;
+    flex-direction: column;
+}
+
+h1 {
+    color: #333;
+    font-size: 32px;
+    margin: 5px 0;
+}
+
+.player-meta {
+    font-size: 18px;
+    color: #555;
+    margin: 5px 0;
+}
+
+/* Team Logo */
+.team-logo-container {
+    text-align: center;
+    margin-top: 10px;
+}
+
+.team-logo {
+    width: 80px;
+    height: auto;
+}
+
+/* Scouting Report Section */
+.scouting-report-section {
+    background: white;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+}
+
+.scouting-report-section h2 {
+    font-size: 24px;
+    color: #333;
+}
+
+/* Career Stats Table */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+th, td {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+    text-align: left;
+}
+
+th {
+    background: #007BFF;
+    color: white;
+}
+
+/* Player Strengths */
+.player-strengths {
+    margin-top: 30px;
+    padding: 20px;
+    background: #fff;
+    border-radius: 5px;
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.player-strengths h2 {
+    font-size: 24px;
+    margin-bottom: 15px;
+}
+
+.trait-icon {
+    width: 200px;  /* Increase size */
+    height: 200px; /* Ensure square aspect ratio */
+    margin: 12px;  /* Add spacing */
+    border-radius: 10px; /* Optional: rounded corners */
+    box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2); /* Optional: subtle shadow */
+    object-fit: contain; /* Ensures icons aren't cropped */
+}
+
+#icon-container {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;  /* Allows icons to wrap properly on small screens */
+    gap: 15px;  /* Adds spacing between icons */
+    padding: 10px;
+}
+
+.player-action-shot-container {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.action-shot {
+    width: 100%;
+    max-height: 300px;
+    object-fit: cover;
+    border-radius: 10px;
+}
+
+.scouting-report-section h3 {
+    font-size: 20px;
+    margin-top: 10px;
+    color: #333;
+}
+
+.scouting-report-section ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.scouting-report-section li {
+    background: #f8f8f8;
+    padding: 10px;
+    margin: 5px 0;
+    border-radius: 5px;
+}
+
+.scouting-report-section {
+    background: white;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+}
+
+.scouting-report-section h3 {
+    font-size: 20px;
+    margin-top: 15px;
+}
+
+.scouting-report-section table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.scouting-report-section th, td {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+    text-align: left;
+}
+
+.hidden {
+    display: none;
+}
+
+.player-strengths {
+    margin-top: 30px;
+    padding: 20px;
+    background: #fff;
+    border-radius: 5px;
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.scouting-report-section {
+    background: white;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+}
+
+.scouting-report-section h3 {
+    font-size: 20px;
+    margin-top: 15px;
+}
+
+.scouting-report-section table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.scouting-report-section th, td {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+    text-align: left;
+}
+
+/* Add spacing between sections */
+hr {
+    border: none;
+    height: 1px;
+    background-color: #ddd;
+    margin: 20px 0;
+}
+
+.hidden {
+    display: none;
+}
+
+.player-strengths {
+    margin-top: 30px;
+    padding: 20px;
+    background: #fff;
+    border-radius: 5px;
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Style bullet points */
+#strengths-list, #weaknesses-list {
+    list-style-type: disc; /* Ensures bullet points appear */
+    list-style-position: inside; /* Keeps them inside the box */
+    margin: 10px 0;
+    padding-left: 25px; /* Adds indentation */
+    background: none !important; /* Removes background */
+    border: none;
+}
+
+/* Ensure no background on individual list items */
+#strengths-list li, #weaknesses-list li {
+    background: none !important;
+    padding: 5px 0;
+    list-style-position: outside; /* Ensures bullets are properly indented */
+    margin-left: 20px; /* Forces correct indentation */
+}
+
+/* If a parent div has unwanted background, reset it */
+.scouting-report-section, .section {
+    background: white !important; /* Ensures white background */
+}
+
+.war-chart-container {
+    width: 100%;
+    max-width: 600px;  /* Prevents infinite horizontal growth */
+    height: 300px; /* Fixed height */
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#warChart {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.team-icon {
+    width: 25px;  /* Small logo size */
+    height: 25px;
+    vertical-align: middle;
+    margin-right: 5px;
+}

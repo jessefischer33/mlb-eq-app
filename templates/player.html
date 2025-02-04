@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ player.fullName }} - Player Profile</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="player-container">
+        <!-- Player Header -->
+        <div class="player-header">
+            <img class="headshot" src="https://securea.mlb.com/mlb/images/players/head_shot/{{ player.id }}.jpg" alt="Headshot">
+            <div class="player-info">
+                <h1>{{ player.fullName }}</h1>
+                <p class="player-meta">
+                    <span>{{ player.primary_position }}</span> | <span>{{ player.last_team }}</span> | 
+                    <span>Born: <span id="birthdate"></span> (<span id="age"></span> years old)</span>
+                </p>
+                
+                <p class="player-meta">
+                    <span>Height: {{ player.height }}</span> | 
+                    <span>Weight: {{ player.weight | int }} lbs</span> | 
+                    <span>Bats: {{ player.bat_side }}</span> | 
+                    <span>Throws: {{ player.pitch_hand }}</span>
+                </p>
+                <p class="player-meta">
+                    <span>MLB Debut: {{ player.mlbDebutDate if player.mlbDebutDate else "N/A" }}</span>
+                </p>
+            </div>
+            <img class="team-logo" src="https://www.mlbstatic.com/team-logos/{{ player.last_team_id | int }}.svg" alt="Team Logo">
+        </div>
+
+        <!-- Player Action Shot -->
+        <div class="player-action-shot-container">
+            <img class="action-shot" src="https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:action:hero:current.jpg/q_auto:good,w_1500/v1/people/{{ player.id }}/action/hero/current" alt="Action Shot">
+        </div>
+
+        <!-- Career Stats Table -->
+        <div class="section">
+            <h2>Career Statistics</h2>
+
+            {% if player.primary_position_type != "Pitcher" %}
+            <h3>Hitting Stats</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Year</th>
+                        <th>Team</th>
+                        <th>League</th>
+                        <th>Games</th>
+                        <th>Hits</th>
+                        <th>HR</th>
+                        <th>RBI</th>
+                        <th>AVG</th>
+                        <th>OBP</th>
+                        <th>SLG</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for stat in stats %}
+                    <tr>
+                        <td>{{ stat.year }}</td>
+                        <td>
+                            <img src="https://www.mlbstatic.com/team-logos/{{ stat.team_id | int }}.svg" class="team-icon" alt="{{ stat.team }}">
+                            {{ stat.team }}
+                        </td>
+                        <td>{{ stat.sport_abbrev }}</td>
+                        <td>{{ stat.hitting_gamesPlayed | int }}</td>
+                        <td>{{ stat.hitting_hits | int }}</td>
+                        <td>{{ stat.hitting_homeRuns | int }}</td>
+                        <td>{{ stat.hitting_rbi | int }}</td>
+                        <td>{{ stat.hitting_avg }}</td>
+                        <td>{{ stat.hitting_obp }}</td>
+                        <td>{{ stat.hitting_slg }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% endif %}
+
+            {% if player.primary_position_type == "Pitcher" or player.primary_position_type == "Two-Way Player" %}
+            <h3>Pitching Stats</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Year</th>
+                        <th>Team</th>
+                        <th>League</th>
+                        <th>Games</th>
+                        <th>GS</th>
+                        <th>W</th>
+                        <th>L</th>
+                        <th>ERA</th>
+                        <th>IP</th>
+                        <th>SO</th>
+                        <th>BB</th>
+                        <th>WHIP</th>
+                        <th>FIP</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for stat in stats %}
+                    <tr>
+                        <td>{{ stat.year }}</td>
+                        <td>
+                            <img src="https://www.mlbstatic.com/team-logos/{{ stat.team_id | int }}.svg" class="team-icon" alt="{{ stat.team }}">
+                            {{ stat.team }}
+                        </td>
+                        <td>{{ stat.sport_abbrev }}</td>
+                        <td>{{ stat.pitching_gamesPlayed | int }}</td>
+                        <td>{{ stat.pitching_gamesStarted | int }}</td>
+                        <td>{{ stat.pitching_wins | int }}</td>
+                        <td>{{ stat.pitching_losses | int }}</td>
+                        <td>{{ stat.pitching_era }}</td>
+                        <td>{{ stat.pitching_inningsPitched }}</td>
+                        <td>{{ stat.pitching_strikeOuts }}</td>
+                        <td>{{ stat.pitching_baseOnBalls }}</td>
+                        <td>{{ stat.pitching_whip }}</td>
+                        <td>{{ stat.pitching_fip }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% endif %}
+        </div>
+
+        <!-- VERTEX AI Prospect Forecasts -->
+        <div class="section">
+            <h2>VERTEX AI Prospect Forecasts</h2>
+            <p><em>Future projections coming soon...</em></p>
+            <div class="war-chart-container">
+                <canvas id="warChart"></canvas>
+            </div>
+        </div>
+
+        <!-- GEMINI Scouting Report -->
+        <div class="scouting-report-section">
+            <h2>GEMINI Scouting Report</h2>
+            <p id="scouting-summary" class="loading">Loading scouting report...</p>
+
+            <hr>
+
+            <div id="projection" class="hidden">
+                <h3>Projection</h3>
+                <p><strong>Best Case:</strong> <span id="best-case"></span></p>
+                <p><strong>Likely Outcome:</strong> <span id="likely-outcome"></span></p>
+                <p><strong>Risk Factor:</strong> <span id="risk-factor"></span></p>
+            </div>
+
+            <hr>
+
+            <div id="scouting-grades" class="hidden">
+                <h3>Scouting Grades (20-80 Scale)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tool</th>
+                            <th>Grade</th>
+                            <th>Comments</th>
+                        </tr>
+                    </thead>
+                    <tbody id="grades-table"></tbody>
+                </table>
+            </div>
+
+            <hr>
+
+            <div id="strengths-weaknesses" class="hidden">
+                <h3>Strengths</h3>
+                <ul id="strengths-list"></ul>
+
+                <h3>Weaknesses</h3>
+                <ul id="weaknesses-list"></ul>
+            </div>
+
+            <hr>
+
+            <div id="mlb-comparison" class="hidden">
+                <h3>MLB Comparison</h3>
+                <p><span id="comparison"></span></p>
+            </div>
+
+            <hr>
+
+            <div id="final-grade" class="hidden">
+                <h3>Final Grade</h3>
+                <p><strong>Overall Grade:</strong> <span id="grade"></span></p>
+                <p><strong>Summary:</strong> <span id="summary"></span></p>
+            </div>
+        </div>
+
+        <!-- [Imagen] Skills -->
+        <div class="player-strengths" class="hidden">
+            <h2>IMAGEN Skills</h2>
+            <div id="icon-container"></div>
+        </div>
+
+        <br>
+        <a href="/"><button>Back to Search</button></a>
+    </div>
+
+    <script>
+        async function loadScoutingReport() {
+            let response = await fetch("/api/scouting_report/{{ player.id }}");
+            let data = await response.json();
+    
+            if (data.error) {
+                document.getElementById("scouting-summary").innerHTML = `<p class="loading">Error loading scouting report.</p>`;
+                return;
+            }
+    
+            // Scouting Summary
+            document.getElementById("scouting-summary").innerText = data.scouting_summary;
+    
+            // Projection
+            document.getElementById("best-case").innerText = data.projection.best_case;
+            document.getElementById("likely-outcome").innerText = data.projection.likely_outcome;
+            document.getElementById("risk-factor").innerText = data.projection.risk_factor;
+            document.getElementById("projection").classList.remove("hidden");
+    
+            // Scouting Grades
+            let gradesTable = document.getElementById("grades-table");
+            
+            gradesTable.innerHTML = "";
+            for (let [key, value] of Object.entries(data.scouting_grades)) {
+                if (value.grade !== "N/A") {
+                    let formattedTool = key.replace(/_/g, " ").replace(/\b\w/g, char => char.toUpperCase());
+                    let row = `<tr><td>${formattedTool}</td><td>${value.grade}</td><td>${value.comments}</td></tr>`;
+                    gradesTable.innerHTML += row;
+                }
+            }
+            document.getElementById("scouting-grades").classList.remove("hidden");
+    
+            // Strengths & Weaknesses
+            let strengthsList = document.getElementById("strengths-list");
+            let weaknessesList = document.getElementById("weaknesses-list");
+            strengthsList.innerHTML = "";
+            weaknessesList.innerHTML = "";
+    
+            data.strengths.forEach(strength => {
+                let li = document.createElement("li");
+                li.innerText = strength;
+                strengthsList.appendChild(li);
+            });
+    
+            data.weaknesses.forEach(weakness => {
+                let li = document.createElement("li");
+                li.innerText = weakness;
+                weaknessesList.appendChild(li);
+            });
+    
+            document.getElementById("strengths-weaknesses").classList.remove("hidden");
+    
+            // MLB Comparison
+            document.getElementById("comparison").innerText = data.mlb_comparison;
+            document.getElementById("mlb-comparison").classList.remove("hidden");
+    
+            // Final Grade
+            document.getElementById("grade").innerText = data.final_grade;
+            document.getElementById("summary").innerText = data.final_summary;
+            document.getElementById("final-grade").classList.remove("hidden");
+    
+            // Icons
+            let iconContainer = document.getElementById("icon-container");
+            iconContainer.innerHTML = "";
+            data.icons.forEach(icon => {
+                let img = document.createElement("img");
+                img.src = icon;
+                img.alt = "Player Trait Icon";
+                img.className = "trait-icon";
+                iconContainer.appendChild(img);
+            });
+            document.getElementById("icon-container").classList.remove("hidden");
+        }
+    
+        window.onload = () => {
+            loadScoutingReport();
+        };
+    </script>
+    <script>
+        function formatBirthdateAndCalculateAge(birthDateString) {
+            if (!birthDateString) return;
+
+            let birthDate = new Date(birthDateString);
+            let options = { year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById("birthdate").innerText = birthDate.toLocaleDateString("en-US", options);
+
+            // Calculate Age
+            let today = new Date();
+            let age = today.getFullYear() - birthDate.getFullYear();
+            let monthDiff = today.getMonth() - birthDate.getMonth();
+
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                age--; // Adjust if the birthday hasn't occurred yet this year
+            }
+
+            document.getElementById("age").innerText = age;
+        }
+
+        window.onload = () => {
+            formatBirthdateAndCalculateAge("{{ player.birthDate }}");  // Calls function with the player's birthdate
+            loadScoutingReport();
+        };
+    </script>
+    <script>
+        let warChartInstance = null;  // Store reference to the chart instance
+
+        function loadWarChart(stats) {
+            if (!stats || stats.length === 0) {
+                document.getElementById("warChart").remove(); // Remove the chart if no data
+                return;
+            }
+
+            let warYears = [];
+            let warValues = [];
+
+            stats.forEach(stat => {
+                let warValue = parseFloat(stat.war);
+                if (!isNaN(warValue)) {  // Only include valid numeric WAR values
+                    warYears.push(stat.year);
+                    warValues.push(warValue);
+                }
+            });
+
+            if (warYears.length === 0) {
+                document.getElementById("warChart").remove(); // Remove chart if no valid WAR data
+                return;
+            }
+
+            // Reset the canvas to prevent height expansion
+            let canvasContainer = document.querySelector(".war-chart-container");
+            canvasContainer.innerHTML = '<canvas id="warChart"></canvas>';
+            let ctx = document.getElementById("warChart").getContext("2d");
+
+            // Destroy previous chart instance if it exists
+            if (warChartInstance !== null) {
+                warChartInstance.destroy();
+            }
+
+            warChartInstance = new Chart(ctx, {
+                type: "line",
+                data: {
+                    labels: warYears,
+                    datasets: [{
+                        label: "WAR by Year (Actual)",
+                        data: warValues,
+                        borderColor: "#007BFF",
+                        backgroundColor: "rgba(0, 123, 255, 0.2)",
+                        borderWidth: 2,
+                        pointRadius: 5,
+                        pointBackgroundColor: "#007BFF"
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: "Year",
+                                font: { size: 14 }
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: "WAR",
+                                font: { size: 14 }
+                            },
+                            beginAtZero: true, // Forces zero to always be visible
+                            ticks: {
+                                suggestedMin: 0 // Ensures WAR scale starts from 0
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        window.onload = () => {
+            formatBirthdateAndCalculateAge("{{ player.birthDate }}");
+            loadScoutingReport();
+            loadWarChart({{ stats | tojson }});  // Ensure stats data is passed correctly
+        };
+    </script>
+
+</body>
+</html>

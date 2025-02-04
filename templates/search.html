@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MLB Prospect Search</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>Find Your MLB Prospect</h1>
+    
+    <form autocomplete="off" action="#" method="GET" id="player_search_form">
+        <div class="autocomplete" style="width:400px;">
+            <input id="playerSearch" type="text" placeholder="Search for a prospect">
+            <input id="playerId" type="hidden">
+            <input id="playerName" type="hidden">
+        </div>
+        <button type="button" id="submitSearch" class="styled-button">Submit</button>
+
+    </form>
+
+    <script>
+        let playerData = {};
+        
+        async function fetchPlayerList(retries = 10) {
+            try {
+                const response = await fetch('/player_list');
+                if (!response.ok) throw new Error('Failed to fetch player list');
+                playerData = await response.json();
+                autocomplete(document.getElementById("playerSearch"), Object.values(playerData));
+            } catch (error) {
+                console.error(error);
+                if (retries > 0) {
+                    setTimeout(() => fetchPlayerList(retries - 1), 10*1000);
+                }
+            }
+        }
+
+        function autocomplete(inp, arr) {
+            var currentFocus;
+            inp.addEventListener("input", function(e) {
+                var a, b, i, val = this.value;
+                closeAllLists();
+                if (!val) return false;
+                currentFocus = -1;
+                a = document.createElement("DIV");
+                a.setAttribute("id", this.id + "autocomplete-list");
+                a.setAttribute("class", "autocomplete-items");
+                this.parentNode.appendChild(a);
+                
+                num_matches = 0;
+                for (i = 0; i < arr.length; i++) {
+                    if (arr[i].toUpperCase().includes(val.toUpperCase())) {
+                        b = document.createElement("DIV");
+                        b.innerHTML = arr[i];
+                        b.innerHTML += "<input type='hidden' value='" + arr[i] + "'>";
+                        b.addEventListener("click", function(e) {
+                            inp.value = this.getElementsByTagName("input")[0].value;
+                            document.getElementById("playerId").value = Object.keys(playerData).find(key => playerData[key] === inp.value);
+                            document.getElementById("playerName").value = inp.value.split(' - ')[0];
+                            closeAllLists();
+                        });
+                        a.appendChild(b);
+                        num_matches = num_matches + 1;
+                        if (num_matches>20) {
+                            break;
+                        }
+                    }
+                }
+            });
+
+            inp.addEventListener("keydown", function(e) {
+                var x = document.getElementById(this.id + "autocomplete-list");
+                if (x) x = x.getElementsByTagName("div");
+                if (e.keyCode == 40) {
+                    currentFocus++;
+                    addActive(x);
+                } else if (e.keyCode == 38) {
+                    currentFocus--;
+                    addActive(x);
+                } else if (e.keyCode == 13) {
+                    if (currentFocus > -1) {
+                        if (x) x[currentFocus].click();
+                    }
+                }
+            });
+            
+            function addActive(x) {
+                if (!x) return false;
+                removeActive(x);
+                if (currentFocus >= x.length) currentFocus = 0;
+                if (currentFocus < 0) currentFocus = (x.length - 1);
+                x[currentFocus].classList.add("autocomplete-active");
+            }
+            
+            function removeActive(x) {
+                for (var i = 0; i < x.length; i++) {
+                    x[i].classList.remove("autocomplete-active");
+                }
+            }
+            
+            function closeAllLists(elmnt) {
+                var x = document.getElementsByClassName("autocomplete-items");
+                for (var i = 0; i < x.length; i++) {
+                    if (elmnt != x[i] && elmnt != inp) {
+                        x[i].parentNode.removeChild(x[i]);
+                    }
+                }
+            }
+            
+            document.addEventListener("click", function (e) {
+                closeAllLists(e.target);
+            });
+        }
+        
+        document.getElementById("player_search_form").addEventListener("submit", function(event) {
+            event.preventDefault();
+            const playerId = document.getElementById("playerId").value;
+            if (playerId) {
+                window.location.href = `/player/${playerId}`;
+            }
+        });
+
+        document.getElementById("submitSearch").addEventListener("click", function() {
+            event.preventDefault();
+            const playerId = document.getElementById("playerId").value;
+            if (playerId) {
+                window.location.href = `/player/${playerId}`;
+            }
+        });
+        
+        fetchPlayerList();
+    </script>
+</body>
+</html>
