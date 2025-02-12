@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ player.fullName }} - Player Profile</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -29,7 +30,10 @@
                     <span>MLB Debut: {{ player.mlbDebutDate if player.mlbDebutDate else "N/A" }}</span>
                 </p>
             </div>
-            <img class="team-logo" src="https://www.mlbstatic.com/team-logos/{{ player.last_team_id | int }}.svg" alt="Team Logo">
+            <img class="team-logo" 
+                src="https://www.mlbstatic.com/team-logos/{{ player.last_team_id | int }}.svg" 
+                alt="Team Logo"
+                onerror="this.style.display='none';">
         </div>
 
         <!-- Player Action Shot -->
@@ -43,97 +47,122 @@
 
             {% if player.primary_position_type != "Pitcher" %}
             <h3>Hitting Stats</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Year</th>
-                        <th>Team</th>
-                        <th>League</th>
-                        <th>Games</th>
-                        <th>Hits</th>
-                        <th>HR</th>
-                        <th>RBI</th>
-                        <th>AVG</th>
-                        <th>OBP</th>
-                        <th>SLG</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for stat in stats %}
-                    <tr>
-                        <td>{{ stat.year }}</td>
-                        <td>
-                            <img src="https://www.mlbstatic.com/team-logos/{{ stat.team_id | int }}.svg" class="team-icon" alt="{{ stat.team }}">
-                            {{ stat.team }}
-                        </td>
-                        <td>{{ stat.sport_abbrev }}</td>
-                        <td>{{ stat.hitting_gamesPlayed | int }}</td>
-                        <td>{{ stat.hitting_hits | int }}</td>
-                        <td>{{ stat.hitting_homeRuns | int }}</td>
-                        <td>{{ stat.hitting_rbi | int }}</td>
-                        <td>{{ stat.hitting_avg }}</td>
-                        <td>{{ stat.hitting_obp }}</td>
-                        <td>{{ stat.hitting_slg }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th colspan="10" class="mlb-eq-no-header"></th>
+                            <th colspan="3" class="mlb-eq-header">MLB Equivalent (MLB EQ) <sup><a href="#mlb-eq-footnote">[1]</a></sup></th>
+                        </tr>
+                        <tr>
+                            <th>Year</th>
+                            <th>Team</th>
+                            <th>League</th>
+                            <th>Games</th>
+                            <th>Hits</th>
+                            <th>HR</th>
+                            <th>RBI</th>
+                            <th>AVG</th>
+                            <th>OBP</th>
+                            <th>SLG</th>
+                            <th class="mlb-eq-col">AVG EQ</th>
+                            <th>OBP EQ</th>
+                            <th>SLG EQ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for stat in stats %}
+                        <tr>
+                            <td>{{ stat.year }}</td>
+                            <td>
+                                <img src="https://www.mlbstatic.com/team-logos/{{ stat.team_id | int }}.svg" class="team-icon" alt="{{ stat.team }}" onerror="this.style.display='none';">
+                                {{ stat.team }}
+                            </td>
+                            <td>{{ stat.sport_abbrev }}</td>
+                            <td>{{ stat.hitting_gamesPlayed | int }}</td>
+                            <td>{{ stat.hitting_hits | int }}</td>
+                            <td>{{ stat.hitting_homeRuns | int }}</td>
+                            <td>{{ stat.hitting_rbi | int }}</td>
+                            <td>{{ "%.3f"|format(stat.hitting_avg) }}</td>
+                            <td>{{ "%.3f"|format(stat.hitting_obp) }}</td>
+                            <td>{{ "%.3f"|format(stat.hitting_slg) }}</td>
+                            <td class="mlb-eq-col">{{ "%.3f"|format(stat.avg_eq_no_age) }}</td>
+                            <td>{{ "%.3f"|format(stat.obp_eq_no_age) }}</td>
+                            <td>{{ "%.3f"|format(stat.slg_eq_no_age) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
             {% endif %}
 
             {% if player.primary_position_type == "Pitcher" or player.primary_position_type == "Two-Way Player" %}
             <h3>Pitching Stats</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Year</th>
-                        <th>Team</th>
-                        <th>League</th>
-                        <th>Games</th>
-                        <th>GS</th>
-                        <th>W</th>
-                        <th>L</th>
-                        <th>ERA</th>
-                        <th>IP</th>
-                        <th>SO</th>
-                        <th>BB</th>
-                        <th>WHIP</th>
-                        <th>FIP</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for stat in stats %}
-                    <tr>
-                        <td>{{ stat.year }}</td>
-                        <td>
-                            <img src="https://www.mlbstatic.com/team-logos/{{ stat.team_id | int }}.svg" class="team-icon" alt="{{ stat.team }}">
-                            {{ stat.team }}
-                        </td>
-                        <td>{{ stat.sport_abbrev }}</td>
-                        <td>{{ stat.pitching_gamesPlayed | int }}</td>
-                        <td>{{ stat.pitching_gamesStarted | int }}</td>
-                        <td>{{ stat.pitching_wins | int }}</td>
-                        <td>{{ stat.pitching_losses | int }}</td>
-                        <td>{{ stat.pitching_era }}</td>
-                        <td>{{ stat.pitching_inningsPitched }}</td>
-                        <td>{{ stat.pitching_strikeOuts }}</td>
-                        <td>{{ stat.pitching_baseOnBalls }}</td>
-                        <td>{{ stat.pitching_whip }}</td>
-                        <td>{{ stat.pitching_fip }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th colspan="10" class="mlb-eq-no-header"></th>
+                            <th colspan="3" class="mlb-eq-header">MLB Equivalent (MLB EQ) <sup><a href="#mlb-eq-footnote">[1]</a></sup></th>
+                        </tr>
+                        <tr>
+                            <th>Year</th>
+                            <th>Team</th>
+                            <th>League</th>
+                            <th>Games</th>
+                            <th>W</th>
+                            <th>L</th>
+                            <th>IP</th>
+                            <th>ERA</th>
+                            <th>WHIP</th>
+                            <th>K/9</th>
+                            <th class="mlb-eq-col">ERA EQ</th>
+                            <th>WHIP EQ</th>
+                            <th>K/9 EQ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for stat in stats %}
+                        <tr>
+                            <td>{{ stat.year }}</td>
+                            <td>
+                                <img src="https://www.mlbstatic.com/team-logos/{{ stat.team_id | int }}.svg" class="team-icon" alt="{{ stat.team }}" onerror="this.style.display='none';">
+                                {{ stat.team }}
+                            </td>
+                            <td>{{ stat.sport_abbrev }}</td>
+                            <td>{{ stat.pitching_gamesPlayed | int }}</td>
+                            <td>{{ stat.pitching_wins | int }}</td>
+                            <td>{{ stat.pitching_losses | int }}</td>
+                            <td>{{ stat.pitching_inningsPitched |int }}</td>
+                            <td>{{ "%.2f"|format(stat.pitching_era) }}</td>
+                            <td>{{ "%.3f"|format(stat.pitching_whip) }}</td>
+                            <td>{{ "%.1f"|format(stat.pitching_strikeoutsPer9Inn) }}</td>
+                            <td class="mlb-eq-col">{{ "%.2f"|format(stat.era_eq_no_age) }}</td>
+                            <td>{{ "%.3f"|format(stat.whip_eq_no_age) }}</td>
+                            <td>{{ "%.1f"|format(stat["k/9_eq_no_age"]) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
             {% endif %}
+            <p id="mlb-eq-footnote" class="mlb-eq-note">
+                <b>MLB Equivalent:</b> These adjusted stats account for <b>sample size</b> (using empirical Bayes methods), <b>competition level</b> (MLB, AAA, AA, etc.), <b>league</b> (AL, NL, NPB, KBO, etc.), <b>era</b> (1927, 1998, 2004, etc.), and <b>ballpark</b> (Dodger Stadium, Safeco Field, Coors Field, etc.). They are normalized to an <b>MLB/AL/2000 equivalent at Dodger Stadium</b> for better comparison across contexts.
+            </p>            
         </div>
 
-        <!-- VERTEX AI Prospect Forecasts -->
         <div class="section">
-            <h2>VERTEX AI Prospect Forecasts</h2>
-            <p><em>Future projections coming soon...</em></p>
-            <div class="war-chart-container">
-                <canvas id="warChart"></canvas>
-            </div>
-        </div>
+            <h2>Vertex AI WAR Projections <sup><a href="#estimated-war-footnote">[2]</a></sup></h2>
+            <canvas id="warChart"></canvas>
+            <p id="estimated-war-footnote" class="war-footnote">
+                <b>Estimated WAR:</b> This value is derived from a <b>regression model</b> that translates <b>MLB Equivalent stats</b> into an MLB WAR estimate. The model is trained on <b>historical MLB player data</b> to account for the relationship between performance metrics and WAR at the Major League level. 
+            
+                <br><br>
+            
+                <b>Projected WAR:</b> This represents a <b>forward-looking estimate</b> of a player's WAR in future seasons. These projections incorporate <b>age curves, player trends, and statistical forecasting</b> to predict future performance. Unlike Estimated WAR, which translates past performance into MLB terms, Projected WAR aims to account for <b>expected development, decline, or sustained performance</b> based on historical trends and predictive modeling.
+            </p>
+            
+        </div>        
 
         <!-- GEMINI Scouting Report -->
         <div class="scouting-report-section">
@@ -153,18 +182,20 @@
 
             <div id="scouting-grades" class="hidden">
                 <h3>Scouting Grades (20-80 Scale)</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Tool</th>
-                            <th>Grade</th>
-                            <th>Comments</th>
-                        </tr>
-                    </thead>
-                    <tbody id="grades-table"></tbody>
-                </table>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Tool</th>
+                                <th>Grade</th>
+                                <th>Comments</th>
+                            </tr>
+                        </thead>
+                        <tbody id="grades-table"></tbody>
+                    </table>
+                </div>
             </div>
-
+        
             <hr>
 
             <div id="strengths-weaknesses" class="hidden">
@@ -231,6 +262,7 @@
                     gradesTable.innerHTML += row;
                 }
             }
+
             document.getElementById("scouting-grades").classList.remove("hidden");
     
             // Strengths & Weaknesses
@@ -305,87 +337,149 @@
         };
     </script>
     <script>
-        let warChartInstance = null;  // Store reference to the chart instance
+        // let warChartInstance = null;
+        // function loadWarChart(stats, projections) {
+        //     let warYears = stats.map(stat => stat.year);
+        //     let warValues = stats.map(stat => parseFloat(stat.war));
+        //     let estimatedValues = stats.map(stat => (parseFloat(stat.hitting_war_pred)|| 0)+(parseFloat(stat.pitching_war_pred)|| 0));
+            
+        //     let projectionYears = projections.map(proj => proj.year);
+        //     let projectionValues = projections.map(proj => parseFloat(proj.mean));
 
-        function loadWarChart(stats) {
-            if (!stats || stats.length === 0) {
-                document.getElementById("warChart").remove(); // Remove the chart if no data
-                return;
-            }
+        //     let allYears = warYears.concat(projectionYears.filter(year => !warYears.includes(year)));
+        //     let actualWarData = allYears.map(year => warYears.includes(year) ? warValues[warYears.indexOf(year)] : null);
+        //     let estimatedWarData = allYears.map(year => warYears.includes(year) ? estimatedValues[warYears.indexOf(year)] : null);
+        //     let projectedWarData = allYears.map(year => projectionYears.includes(year) ? projectionValues[projectionYears.indexOf(year)] : null);
 
-            let warYears = [];
-            let warValues = [];
+        //     let ctx = document.getElementById("warChart").getContext("2d");
+        //     if (warChartInstance !== null) {
+        //         warChartInstance.destroy();
+        //     }
+        //     warChartInstance = new Chart(ctx, {
+        //         type: "line",
+        //         data: {
+        //             labels: allYears,
+        //             datasets: [
+        //                 // {
+        //                 //     label: "Actual WAR",
+        //                 //     data: actualWarData,
+        //                 //     borderColor: "#007BFF",
+        //                 //     fill: false
+        //                 // },
+        //                 {
+        //                     label: "Estimated WAR",
+        //                     data: estimatedWarData,
+        //                     // borderColor: "#FF5733",
+        //                     borderColor: "#007BFF",
+        //                     fill: false
+        //                 },
+        //                 {
+        //                     label: "Projected WAR",
+        //                     data: projectedWarData,
+        //                     borderColor: "#28A745",
+        //                     fill: false,
+        //                     borderDash: [5, 5]
+        //                 }
+        //             ]
+        //         },
+        //         options: {
+        //             responsive: true,
+        //             scales: {
+        //                 x: { title: { display: true, text: "Year" } },
+        //                 y: { title: { display: true, text: "WAR" } }
+        //             }
+        //         }
+        //     });
+        // }
+        // window.onload = () => {
+        //     formatBirthdateAndCalculateAge("{{ player.birthDate }}");
+        //     loadScoutingReport();
+        //     loadWarChart({{ stats | tojson }}, {{ projections | tojson }});
+        // };
+let warChartInstance = null;
+function loadWarChart(stats, projections) {
+    let warYears = stats.map(stat => stat.year);
+    let warValues = stats.map(stat => parseFloat(stat.war));
+    let estimatedValues = stats.map(stat => (parseFloat(stat.hitting_war_pred)|| 0)+(parseFloat(stat.pitching_war_pred)|| 0));
+    
+    let projectionYears = projections.map(proj => proj.year);
+    let projectionValues = projections.map(proj => parseFloat(proj.mean));
+    let projectionLowValues = projections.map(proj => parseFloat(proj['0.1'])); // 10th percentile
+    let projectionHighValues = projections.map(proj => parseFloat(proj['0.9'])); // 90th percentile
 
-            stats.forEach(stat => {
-                let warValue = parseFloat(stat.war);
-                if (!isNaN(warValue)) {  // Only include valid numeric WAR values
-                    warYears.push(stat.year);
-                    warValues.push(warValue);
-                }
-            });
+    let allYears = warYears.concat(projectionYears.filter(year => !warYears.includes(year)));
+    let actualWarData = allYears.map(year => warYears.includes(year) ? warValues[warYears.indexOf(year)] : null);
+    let estimatedWarData = allYears.map(year => warYears.includes(year) ? estimatedValues[warYears.indexOf(year)] : null);
+    let projectedWarData = allYears.map(year => projectionYears.includes(year) ? projectionValues[projectionYears.indexOf(year)] : null);
+    let projectedLowData = allYears.map(year => projectionYears.includes(year) ? projectionLowValues[projectionYears.indexOf(year)] : null);
+    let projectedHighData = allYears.map(year => projectionYears.includes(year) ? projectionHighValues[projectionYears.indexOf(year)] : null);
 
-            if (warYears.length === 0) {
-                document.getElementById("warChart").remove(); // Remove chart if no valid WAR data
-                return;
-            }
-
-            // Reset the canvas to prevent height expansion
-            let canvasContainer = document.querySelector(".war-chart-container");
-            canvasContainer.innerHTML = '<canvas id="warChart"></canvas>';
-            let ctx = document.getElementById("warChart").getContext("2d");
-
-            // Destroy previous chart instance if it exists
-            if (warChartInstance !== null) {
-                warChartInstance.destroy();
-            }
-
-            warChartInstance = new Chart(ctx, {
-                type: "line",
-                data: {
-                    labels: warYears,
-                    datasets: [{
-                        label: "WAR by Year (Actual)",
-                        data: warValues,
-                        borderColor: "#007BFF",
-                        backgroundColor: "rgba(0, 123, 255, 0.2)",
-                        borderWidth: 2,
-                        pointRadius: 5,
-                        pointBackgroundColor: "#007BFF"
-                    }]
+    let ctx = document.getElementById("warChart").getContext("2d");
+    if (warChartInstance !== null) {
+        warChartInstance.destroy();
+    }
+    warChartInstance = new Chart(ctx, {
+        type: "line",
+        data: {
+            labels: allYears,
+            datasets: [
+                // Estimated WAR
+                {
+                    label: "Estimated WAR",
+                    data: estimatedWarData,
+                    borderColor: "#007BFF",
+                    fill: false
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        x: {
-                            title: {
-                                display: true,
-                                text: "Year",
-                                font: { size: 14 }
-                            }
-                        },
-                        y: {
-                            title: {
-                                display: true,
-                                text: "WAR",
-                                font: { size: 14 }
-                            },
-                            beginAtZero: true, // Forces zero to always be visible
-                            ticks: {
-                                suggestedMin: 0 // Ensures WAR scale starts from 0
-                            }
+                // Projected WAR (Mean)
+                {
+                    label: "Projected WAR",
+                    data: projectedWarData,
+                    borderColor: "#28A745",
+                    fill: false,
+                    borderDash: [5, 5]
+                },
+                // Confidence Band (Projected WAR Range)
+                {
+                    label: "Projected WAR Range",
+                    data: projectedHighData,
+                    borderColor: "rgba(40, 167, 69, 0)", // Transparent to hide the line
+                    backgroundColor: "rgba(40, 167, 69, 0.2)", // Light green shade for range
+                    fill: "+1"
+                },
+                {
+                    label: "Projected WAR Range (Lower)",
+                    data: projectedLowData,
+                    borderColor: "rgba(40, 167, 69, 0)", // Transparent to hide the line
+                    backgroundColor: "rgba(40, 167, 69, 0.2)", // Same shade for continuity
+                    fill: "-1"
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: { title: { display: true, text: "Year" } },
+                y: { title: { display: true, text: "WAR" } }
+            },
+            plugins: {
+                legend: {
+                    labels: {
+                        filter: function (legendItem) {
+                            return legendItem.text !== "Projected WAR Range (Lower)"; // Hide duplicate legend entry
                         }
                     }
                 }
-            });
+            }
         }
+    });
+}
 
-        window.onload = () => {
-            formatBirthdateAndCalculateAge("{{ player.birthDate }}");
-            loadScoutingReport();
-            loadWarChart({{ stats | tojson }});  // Ensure stats data is passed correctly
-        };
+window.onload = () => {
+    formatBirthdateAndCalculateAge("{{ player.birthDate }}");
+    loadScoutingReport();
+    loadWarChart({{ stats | tojson }}, {{ projections | tojson }});
+};
+
     </script>
-
 </body>
 </html>

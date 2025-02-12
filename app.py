@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, render_template, request, send_from_directory, send_file
+from flask import Flask, jsonify, render_template, request, Response, send_from_directory, send_file
 import os
 import pandas as pd
 import logging
@@ -6,6 +6,7 @@ import json
 import re
 import threading
 import time
+import gzip
 from io import BytesIO
 from google.cloud import storage
 import google.generativeai as genai
@@ -21,6 +22,7 @@ app = Flask(__name__, template_folder="templates", static_folder="static")
 
 # Caching Data
 players_df = None
+projections_df = None
 stats_df = None
 player_ids = None
 
@@ -28,7 +30,7 @@ BUCKET = "mlb-eq-data"
 
 def load_parquet_data():
     """Loads Parquet files asynchronously."""
-    global players_df, stats_df, player_ids
+    global players_df, projections_df, stats_df, player_ids
     logging.info("Loading Parquet data...")
 
     try:
@@ -38,14 +40,16 @@ def load_parquet_data():
         logging.info(f"Loading players data")
 
         # Load players data
-        players_blob = bucket.blob("data/all_mlb_players.parquet")
-        players_df_temp = pd.read_parquet(pd.io.common.BytesIO(players_blob.download_as_bytes()))
+        players_df_temp = pd.read_parquet(pd.io.common.BytesIO(bucket.blob("data/all_mlb_players.parquet").download_as_bytes()))
         
+        logging.info(f"Loading projections data")
+
+        projections_df = pd.read_parquet(pd.io.common.BytesIO(bucket.blob("data/mlb_projections.parquet").download_as_bytes())).sort_values('year')
+
         logging.info(f"Loading stats data")
 
         # Load stats data
-        stats_blob = bucket.blob("data/all_mlb_stats.parquet")
-        stats_df = pd.read_parquet(pd.io.common.BytesIO(stats_blob.download_as_bytes()))
+        stats_df = pd.read_parquet(pd.io.common.BytesIO(bucket.blob("data/all_mlb_stats_eq.parquet").download_as_bytes()))
 
         # Determine each player's most recent team and league
         last_team = (
@@ -65,7 +69,7 @@ def load_parquet_data():
 
         # Extract player ID to name mapping
         player_ids = {
-            row['id']: f"{row['fullName']} - {row['last_team']} ({row['last_league']}, {row['last_year']})"
+            row['id']: f"{row['fullName']} | {row['last_league']} | {row['last_team']} | {row['last_year']}"
             for _, row in players_df.iterrows()
         }
         logging.info(f"Loaded {len(player_ids)} players into memory.")
@@ -88,11 +92,20 @@ def player_list():
         load_parquet_data()
         # return jsonify({"error": "Data not loaded"}), 500
 
-    return jsonify(player_ids)
+    # return jsonify(player_ids)
+    json_data = json.dumps(player_ids)  # Convert to JSON string
+    compressed_data = gzip.compress(json_data.encode("utf-8"))  # Compress
+
+    response = Response(compressed_data, content_type="application/json")
+    response.headers["Content-Encoding"] = "gzip"  # Let the client know it's gzipped
+    return response
+
 
 @app.route("/player/<int:player_id>")
 def player_page(player_id):
     """Loads the player profile page."""
+    global players_df, projections_df, stats_df
+
     if players_df is None or stats_df is None:
         return "Data not loaded", 500
 
@@ -102,15 +115,18 @@ def player_page(player_id):
 
     player_info = player_info.iloc[0]
     player_stats = stats_df[stats_df["player_id"] == player_id].to_dict(orient="records")
+    player_projections = projections_df[projections_df["player_id"] == player_id].to_dict(orient="records")
 
     return render_template(
         "player.html",
         player=player_info,
-        stats=player_stats
+        stats=player_stats,
+        projections=player_projections
     )
 
 def create_scouting_report_prompt(player_id):
     """Generates a structured 20-80 scouting report prompt that outputs JSON."""
+    global player_ids
 
     player_row = players_df.loc[players_df["id"] == player_id]
     if player_row.empty:
@@ -329,6 +345,10 @@ def get_icon(trait_name):
 
     # Serve the image as a PNG response
     return send_file(BytesIO(image_bytes), mimetype="image/png")
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory('static', 'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 if __name__ == "__main__":
     threading.Thread(target=load_parquet_data, daemon=True).start()
